@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 from rent_app.models import Landlord, Apartment, Tenant, RentalContract, MaintenanceRequest, Image
-from django.core.files.images import ImageFile
+from django.core.files import File
 from django.utils.crypto import get_random_string
-import tempfile
+from django.core.files.images import ImageFile
 import os
 
 
@@ -25,22 +25,20 @@ class Command(BaseCommand):
         maintenance_request1 = MaintenanceRequest.objects.create(description='Broken Window', request_date='2023-08-20', apartment=apartment1)
         maintenance_request2 = MaintenanceRequest.objects.create(description='Broken AC', request_date='2023-09-10', apartment=apartment2)
 
-        image1 = create_image()
-        image2 = create_image()
+        image_path1 = r'C:\Users\meljo\Downloads\apartment1.jpg'
+        image_path2 = r'C:\Users\meljo\Downloads\apartment2.png'
 
-        Image.objects.create(image=image1, apartment=apartment1)
-        Image.objects.create(image=image2, apartment=apartment2)
+        create_image(image_path1, apartment1)
+        create_image(image_path2, apartment2)
 
         self.stdout.write(self.style.SUCCESS('Initial data created successfully.'))
 
-def create_image():
-
-    image_content = get_random_string(1024).encode('utf-8')
-    _, temp_file_path =tempfile.mkstemp(suffix=".png", dir=tempfile.gettempdir())
-
-    with open(temp_file_path, 'wb') as temp_file:
-        temp_file.write(image_content)
-
-    return ImageFile(open(temp_file_path, 'rb'), name=os.path.basename(temp_file_path))
+def create_image(image_path, apartment):
+    with open(image_path, 'rb') as image_file:
+        original_file_name = os.path.basename(image_path)
+        image = Image.objects.create(apartment=apartment)
+        image.image.save(original_file_name, ImageFile(image_file))
+    return image
+    
         
 
